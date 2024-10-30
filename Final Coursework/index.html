@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="bookstore.js"></script> 
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <a href="#" class="logo" @click="goHome">Home</a>
+            <h1 v-text="sitename"></h1>
+            <button v-on:click="showCheckout" :disabled="cart.length === 0">
+                {{ cartItemCount }}
+                <span class="bi bi-cart"></span> Checkout
+            </button>
+        </header>
+
+        <main>
+            <div v-if="showBook" class="grid-container">
+                <div v-for="book in bookstore" :key="book.subject + book.Location" class="card">
+                    <figure>
+                        <img v-bind:src="book.image" alt="book image">
+                    </figure>
+                    <h2 v-text="book.subject"></h2>
+                    <p>Location: {{ book.Location }}</p>
+                    <p>Price: ${{ book.Price }}</p>
+                    <button v-on:click="addToCart(book)" v-if="canAddToCart(book)">
+                        Add to cart
+                    </button>
+                    <button disabled v-else>
+                        Add to cart
+                    </button>
+                    <span v-if="book.Spaces === cartCount(book.subject, book.Location)">
+                        Sorry, this item is SOLD OUT!
+                    </span>
+                    <span v-else-if="book.Spaces - cartCount(book.subject, book.Location) < 5">
+                        Only {{ book.Spaces - cartCount(book.subject, book.Location) }} left!
+                    </span>
+                    <span v-else>Buy now!</span>
+                    <div>
+                        <span v-for="n in book.rating">★</span>
+                        <span v-for="n in 5 - book.rating">☆</span>
+                    </div>
+                </div>
+            </div>
+           
+            <div v-else>
+                <h2>Checkout</h2>
+                <div v-if="cart.length > 0" class="grid-container">
+                    <div v-for="(item, i) in cart" :key="i" class="card">
+                        <figure>
+                            <img class="card-img" v-bind:src="item.image" width="200" height="200">
+                        </figure>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.subject }}</h5>
+                            <p>Location: {{ item.Location }}</p>
+                            <p>Price: ${{ item.Price }}</p>
+                            <button class="btn btn-danger" @click="removeFromCart(i)">Remove</button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card">
+                    <h3>Total Price: ${{ totalPrice }}</h3>
+                </div>
+                <button v-on:click="submitForm" :disabled="cart.length === 0">Place Order</button>
+
+                <p><strong>First Name:</strong> <input v-model.trim="order.firstName" /></p>
+                    <p><strong>Last Name:</strong> <input v-model.trim="order.lastName" /></p>
+                    <p><strong>Phone Number:</strong> <input v-model.number.trim="order.phoneNumber" /></p>
+                    <p><strong>Address:</strong> <input v-model.trim="order.address" /></p>
+                    <p><strong>City:</strong> <input v-model.trim="order.city" /></p>
+                    <p><strong>Emirate:</strong>
+                        <select v-model="order.emirate">
+                            <option disabled value="">Emirate</option>
+                            <option v-for="(emirate, key) in emirates" :value="emirate">{{ key }}</option>
+                        </select>
+                    </p>
+                    <p><strong>Zip/Postal Code:</strong> <input v-model.number.trim="order.zip" /></p>
+                    <p><input type="checkbox" id="gift" value="true" v-model="order.gift" :true-value="order.sendGift" :false-value="order.dontSendGift">
+                        <label for="gift">Ship As Gift?</label>
+                    </p>
+                    <p><input type="radio" id="home" value="Home" v-model="order.method">
+                        <label for="home">Home</label>
+                        <input type="radio" id="business" value="Business" v-model="order.method">
+                        <label for="business">Business</label>
+                    </p>
+                    <h2>Order Information</h2>
+                    <p>First Name: {{order.firstName}}</p>
+                    <p>Last Name: {{order.lastName}}</p>
+                    <p>Phone Number: {{order.phoneNumber}}</p>
+                    <p>Address: {{order.address}}</p>
+                    <p>City: {{order.city}}</p>
+                    <p>Emirate: {{order.emirate}}</p>
+                    <p>Zip: {{order.zip}}</p>
+                    <p>Gift?: {{order.gift}}</p>
+                    <p>Method: {{order.method}}</p>
+
+                <p v-else class="text-center">Please add an item.</p>            
+            </div>
+        </main>
+    </div>
+
+    <script type="text/javascript">
+        let webstore = new Vue({
+            el: '#app',
+            data: {
+                sitename: "After Class Lesson",
+                showBook: true,
+                order: {
+                    firstName: "",
+                    lastName: "",
+                    phoneNumber: "",
+                    address: "",
+                    city: "",
+                    zip: "",
+                    state: "",
+                    method: 'Home',
+                    gift: false,
+                },
+                emirates: {
+                    DU: 'Dubai',
+                    SJ: 'Sharjah',
+                    AD: 'Abu Dhabi',
+                  
+                },
+                bookstore: bookstore,
+                cart: []
+            },
+            methods: {
+                addToCart: function (book) {
+                    this.cart.push(book);
+                },
+                showCheckout() {
+                    this.showBook = !this.showBook;
+                },
+                submitForm() {
+                    if (this.cart.length > 0) {
+                        alert('Order submitted!');
+                    } else {
+                        alert('Your cart is empty. Please add items to proceed.');
+                    }
+                },
+                canAddToCart: function (book) {
+                    return book.Spaces > this.cartCount(book.subject, book.Location);
+                },
+                cartCount: function (subject, Location) {
+                    return this.cart.filter(item => item.subject === subject && item.Location === Location).length;
+                },
+                removeFromCart(index) {
+                    this.cart.splice(index, 1);
+                },
+                goHome() {
+                    this.showBook = true; // Show the main page content
+                }
+            },
+            computed: {
+                cartItemCount: function () {
+                    return this.cart.length || "";
+                },
+                totalPrice: function () {
+                    return this.cart.reduce((total, item) => total + item.Price, 0);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
